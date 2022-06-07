@@ -168,7 +168,7 @@ sub save_gene_count {
 	while(my $line=<$fh>) {
 		chomp $line;
 		# ignore header
-		next if($line =~ m/^contig\t/);
+		next if($line =~ m/^scaffold\t/);
 
 		my @bits = split /\t/, $line;
 		my ($contig, $pos, $quadrant) = @bits;
