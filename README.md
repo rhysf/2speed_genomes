@@ -9,7 +9,9 @@ Code for identifying signatures of 2 speed genomes
 
 Quadrants are defined as such (ASCII plot made by TW):
   \--------------------------------
+
   \|   Q1          |           Q2 |
+
   \|               |              |
   \----------median uplog---------|
   \|   Q4          |           Q3 |
