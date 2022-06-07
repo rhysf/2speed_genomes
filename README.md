@@ -8,11 +8,11 @@ Code for identifying signatures of 2 speed genomes
 3. Markov_chain_from_quadrant_file.pl (identifies significant numbers of consecutive genes of a given quadrant)
 
 Quadrants are defined as such (ASCII plot made by TW):
-\--------------------------------
-\|   Q1          |           Q2 |
-\|               |              |
-\----------median uplog---------|
-\|   Q4          |           Q3 |
-\|               |              |
-\|---------------|--------------|
-\                |<- median downlog
+  \--------------------------------
+  \|   Q1          |           Q2 |
+  \|               |              |
+  \----------median uplog---------|
+  \|   Q4          |           Q3 |
+  \|               |              |
+  \|---------------|--------------|
+  \                |<- median downlog
