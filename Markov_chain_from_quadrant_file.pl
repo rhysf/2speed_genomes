@@ -24,59 +24,47 @@ if(!defined $opt_p) { $opt_p = 'c'; }
 # quadrant_counts = quadrant -> gene count
 my ($contig_gene_count, $gene_ids, $quadrant_counts, $gene_count) = &save_gene_count($opt_q);
 
-# save contig -> quadrant -> gene count
-# save contig -> quadrant -> consecutive count
-my ($contig_quad_gene_count, $consecutive_counts) = &save_consecutive_counts_per_contig($gene_ids);
+# contig_quad_gene_count = contig -> quadrant -> gene count
+# consecutive_counts = save contig -> quadrant -> consecutive count
+# consecutive_counts_start_stop = contig -> quadrant -> consecutive count = start-stop lines
+my ($contig_quad_gene_count, $consecutive_counts, $consecutive_counts_start_stop) = &save_consecutive_counts_per_contig($gene_ids);
 
 
-# Calculate probabilities for quadrants for whole genome
-#my $q1 = ($$quadrant_counts{1} / $gene_count);
-#my $q2 = ($$quadrant_counts{2} / $gene_count);
-#my $q3 = ($$quadrant_counts{3} / $gene_count);
-#my $q4 = ($$quadrant_counts{4} / $gene_count);
+# Calculate probabilities for finding each number of consecutive genes belonging to a given quadrant
 my %sig_to_line;
 foreach my $contig(keys %{$consecutive_counts}) {
 	foreach my $quadrant(keys %{$$consecutive_counts{$contig}}) {
-		my $consec_count = $$consecutive_counts{$contig}{$quadrant};
+		foreach my $consec_count(keys %{$$consecutive_counts{$contig}{$quadrant}}) {
+			my $num_times_found = $$consecutive_counts{$contig}{$quadrant}{$consec_count};
 
-		# ignore quadrants in a contig without any gene representatives
-		next if($consec_count eq 0);
+			# ignore quadrants in a contig without any gene representatives
+			next if($consec_count eq 0);
 
-		# gene count string
-		my $string;
-		for(my $i=0; $i<$consec_count; $i++) {
-			$string .= $quadrant;
-		}
+			# gene count string
+			my $string;
+			for(my $i=0; $i<$consec_count; $i++) { $string .= $quadrant; }
 
-		# number of genes total
-		my $contig_gene_count_total = $$contig_gene_count{$contig};
-		#warn "$contig $quadrant $consec_count $string $contig_gene_count_total\n";
+			# number of genes total
+			my $contig_gene_count_total = $$contig_gene_count{$contig};
+			#warn "$contig $quadrant $consec_count $string $contig_gene_count_total\n";
 
-		# Probably not possible, but just in case string is bigger than gene count
-		my $string_length = length($string);
-		die "string needs to be smaller than length\n" if($string_length > $contig_gene_count_total);
+			# Probably not possible, but just in case string is bigger than gene count
+			my $string_length = length($string);
+			die "string needs to be smaller than length\n" if($string_length > $contig_gene_count_total);
 
-		# define probability for genes in a given quadrant
-		#my $q1 = ($$contig_quad_gene_count{$contig}{1} / $contig_gene_count_total);
-		#my $q2 = ($$contig_quad_gene_count{$contig}{2} / $contig_gene_count_total);
-		#my $q3 = ($$contig_quad_gene_count{$contig}{3} / $contig_gene_count_total);
-		#my $q4 = ($$contig_quad_gene_count{$contig}{4} / $contig_gene_count_total);
-		my $q;
-		if($opt_p eq 'c') {
-			$q = ($$contig_quad_gene_count{$contig}{$quadrant} / $contig_gene_count_total);
-		} else {
-			$q = ($$quadrant_counts{$quadrant} / $gene_count);
-		}
-		#warn "q1 = $q1, q2 = $q2, q3 = $q3 and q4 = $q4\n";
-		#die;
-		
-		# Upper tail
-		my $cumulative_probability = 0;
-		CUMULATIVE_COUNT: for(my $i=0; $i<($contig_gene_count_total - $string_length); $i++) {
-			my $incremental_length = ($string_length + $i);
+			# define probability for genes in a given quadrant
+			my $q;
+			if($opt_p eq 'c') {
+				$q = ($$contig_quad_gene_count{$contig}{$quadrant} / $contig_gene_count_total);
+			} else {
+				$q = ($$quadrant_counts{$quadrant} / $gene_count);
+			}
+			#warn "q1 = $q1, q2 = $q2, q3 = $q3 and q4 = $q4\n";
+
+			# Upper tail
+			my $cumulative_probability = 0;
+			my $incremental_length = $string_length;
 			my $string_incremented = $string;
-			for(my $h=0; $h<$i; $h++) { $string_incremented .= 'A'; }
-			#print "$pretend_string\n";
 
 			# Define transition matrix
 			my @transition_matrix = &save_transition_matrix($string_incremented, $q);
@@ -103,21 +91,21 @@ foreach my $contig(keys %{$consecutive_counts}) {
 			$cumulative_probability += $probability;
 			#print "probability for $incremental_length length = $probability\n";
 
-			# upper tail doesn't work (prob > 1), so don't use
-			last CUMULATIVE_COUNT;
-		}
+			# Region
+			my $region_saved = $$consecutive_counts_start_stop{$contig}{$quadrant}{$consec_count};
 
-		# Save
-		my $save_line = "$contig\t$quadrant\t$consec_count\t$contig_gene_count_total\t$q\t$cumulative_probability\n";
-		if($cumulative_probability < $opt_c) {
-			$sig_to_line{$cumulative_probability} .= $save_line;
+			# Save
+			my $save_line = "$contig\t$region_saved\t$quadrant\t$consec_count\t$contig_gene_count_total\t$q\t$cumulative_probability\n";
+			if($cumulative_probability < $opt_c) {
+				$sig_to_line{$cumulative_probability} .= $save_line;
+			}
+			#print "$contig\t$quadrant\t$consec_count\t$contig_gene_count_total\t$q\t$cumulative_probability\n";
 		}
-		#print "$contig\t$quadrant\t$consec_count\t$contig_gene_count_total\t$q\t$cumulative_probability\n";
 	}
 }
 
 # print
-print "Contig\tQuadrant\tConsec_count\tTotal_count\tProb quadrant\tUpper tail probability\n";
+print "Contig\tRegion_saved\tQuadrant\tConsec_count\tTotal_count\tProb_quadrant\tCumulative_probability_of_consecutive_genes\n";
 foreach my $sig(sort { $a <=> $b } keys %sig_to_line) {
 	my $lines = $sig_to_line{$sig};
 	print "$lines";
@@ -244,15 +232,20 @@ sub save_consecutive_counts_per_contig {
 
 	# save contig -> quadrant -> largest consecutive count
 	my %contig_quad_consec_count;
+	my %contig_quad_consec_count_start_stop;
 	foreach my $contig(sort keys %consecutative_quadrant_counts) {
 		foreach my $quadrant(sort keys %{$consecutative_quadrant_counts{$contig}}) {
 			QUADCOUNT: foreach my $quadrant_count(sort { $b <=> $a } keys %{$consecutative_quadrant_counts{$contig}{$quadrant}}) {
+				foreach my $start(keys %{$consecutative_quadrant_counts{$contig}{$quadrant}{$quadrant_count}}) {
+					my $stop = $consecutative_quadrant_counts{$contig}{$quadrant}{$quadrant_count}{$start};
+					$contig_quad_consec_count_start_stop{$contig}{$quadrant}{$quadrant_count} .= "$start-$stop ";
+					$contig_quad_consec_count{$contig}{$quadrant}{$quadrant_count}++;
+				}
 				#warn "$contig quadrant $quadrant largest = $quadrant_count\n";
-				$contig_quad_consec_count{$contig}{$quadrant} = $quadrant_count;
-				last QUADCOUNT;
+				#last QUADCOUNT;
 			}
 		}
 	}
-	return (\%contig_quad_gene_count, \%contig_quad_consec_count);
+	return (\%contig_quad_gene_count, \%contig_quad_consec_count, \%contig_quad_consec_count_start_stop);
 }
 
