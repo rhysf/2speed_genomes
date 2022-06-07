@@ -8,13 +8,15 @@ use Data::Dumper;
 
 # usage
 my $usage = "perl $0 -q <quadrant_all_locations.tab (scaffold location quadrant)>\n
-Optional: -p Initial probabilities based on genome wide count (g) or contig-by-contig (c) [c]\n
+Optional: -p Initial probabilities based on genome wide count (g) or contig-by-contig (c) [c]
+          -c Cutoff for significance [0.01]\n
 Notes: maximum four numbers hard coded
        transition matrix only works for the same number consecutively and not one with repeated elements (e.g. 012023)
        https://stats.stackexchange.com/questions/26988/probability-of-finding-a-particular-sequence-of-base-pairs\n";
-our($opt_p, $opt_q);
-getopt('pq');
+our($opt_c, $opt_p, $opt_q);
+getopt('pqc');
 die $usage unless ($opt_q);
+if(!defined $opt_c) { $opt_c = 0.01; }
 if(!defined $opt_p) { $opt_p = 'c'; }
 
 # contig_gene_count = contig -> tally of genes on contig
@@ -26,13 +28,13 @@ my ($contig_gene_count, $gene_ids, $quadrant_counts, $gene_count) = &save_gene_c
 # save contig -> quadrant -> consecutive count
 my ($contig_quad_gene_count, $consecutive_counts) = &save_consecutive_counts_per_contig($gene_ids);
 
+
 # Calculate probabilities for quadrants for whole genome
 #my $q1 = ($$quadrant_counts{1} / $gene_count);
 #my $q2 = ($$quadrant_counts{2} / $gene_count);
 #my $q3 = ($$quadrant_counts{3} / $gene_count);
 #my $q4 = ($$quadrant_counts{4} / $gene_count);
-
-print "Contig\tQuadrant\tConsec_count\tTotal_count\tProb quadrant\tUpper tail probability\n";
+my %sig_to_line;
 foreach my $contig(keys %{$consecutive_counts}) {
 	foreach my $quadrant(keys %{$$consecutive_counts{$contig}}) {
 		my $consec_count = $$consecutive_counts{$contig}{$quadrant};
@@ -105,8 +107,20 @@ foreach my $contig(keys %{$consecutive_counts}) {
 			last CUMULATIVE_COUNT;
 		}
 
-		print "$contig\t$quadrant\t$consec_count\t$contig_gene_count_total\t$q\t$cumulative_probability\n";
+		# Save
+		my $save_line = "$contig\t$quadrant\t$consec_count\t$contig_gene_count_total\t$q\t$cumulative_probability\n";
+		if($cumulative_probability < $opt_c) {
+			$sig_to_line{$cumulative_probability} .= $save_line;
+		}
+		#print "$contig\t$quadrant\t$consec_count\t$contig_gene_count_total\t$q\t$cumulative_probability\n";
 	}
+}
+
+# print
+print "Contig\tQuadrant\tConsec_count\tTotal_count\tProb quadrant\tUpper tail probability\n";
+foreach my $sig(sort { $a <=> $b } keys %sig_to_line) {
+	my $lines = $sig_to_line{$sig};
+	print "$lines";
 }
 
 sub save_transition_matrix {
