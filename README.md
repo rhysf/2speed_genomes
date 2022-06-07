@@ -9,9 +9,11 @@ Code for identifying signatures of 2 speed genomes
 
 Quadrants are defined as:
 
-Q1 (upper left) | Q2 (upper right)
-Q4 (lower left) | Q3 (lower right)
+  Q1 (upper left) | Q2 (upper right)
+  
+  Q4 (lower left) | Q3 (lower right)
 
+  
   1 = < median log10(downstream length) && > median log10(upstream length)
 
   2 = > median log10(downstream length) && > median log10(upstream length)
