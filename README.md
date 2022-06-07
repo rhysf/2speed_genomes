@@ -9,7 +9,7 @@ Code for identifying signatures of 2 speed genomes
 
 # Results
 
-  Upper tail probability is the probability of finding that number or more consecutive genes in that given quadrant
+  Cumulative_probability_of_consecutive_genes is the probability of finding that number of consecutive genes in that given quadrant
 
 Quadrants are defined as:
 
