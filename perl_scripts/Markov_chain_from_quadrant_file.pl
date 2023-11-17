@@ -94,12 +94,17 @@ foreach my $contig(keys %{$consecutive_counts}) {
 			# Region
 			my $region_saved = $$consecutive_counts_start_stop{$contig}{$quadrant}{$consec_count};
 
-			# Save
-			my $save_line = "$contig\t$region_saved\t$quadrant\t$consec_count\t$contig_gene_count_total\t$q\t$cumulative_probability\n";
-			if($cumulative_probability < $opt_c) {
-				$sig_to_line{$cumulative_probability} .= $save_line;
+			# might be multiple regions
+			my @regions_saved = split / /, $region_saved;
+			foreach my $region(@regions_saved) {
+
+				# Save
+				my $save_line = "$contig\t$region\t$quadrant\t$consec_count\t$contig_gene_count_total\t$q\t$cumulative_probability\n";
+				if($cumulative_probability < $opt_c) {
+					$sig_to_line{$cumulative_probability} .= $save_line;
+				}
+				#print "$contig\t$quadrant\t$consec_count\t$contig_gene_count_total\t$q\t$cumulative_probability\n";
 			}
-			#print "$contig\t$quadrant\t$consec_count\t$contig_gene_count_total\t$q\t$cumulative_probability\n";
 		}
 	}
 }
