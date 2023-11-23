@@ -10,10 +10,16 @@ find_os <- function() {
 	if(OS == "Darwin") {
 		lib_location = '/Library/Frameworks/R.framework/Resources/library'
 	}
+	else if(OS == "Linux") {
+		#lib_location = '/usr/lib/R/library'
+		lib_location = '~/R/x86_64-pc-linux-gnu-library/4.1'
+	}
 	else {
 		stop("ERROR: R_functions.R -> find_os: OS cannot be determined", call.=FALSE)
 	}
 	return(lib_location)
+	#lib_location = .libPaths()
+	#return(lib_location[1])
 }
 
 add_dependency <- function(library_wanted) {
