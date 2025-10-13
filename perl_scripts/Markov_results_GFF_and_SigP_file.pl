@@ -1,8 +1,6 @@
 #!/usr/bin/perl -w
 use strict;
 use Getopt::Std;
-#use FindBin qw($Bin);
-#use lib "$Bin/perl_modules";
 
 ### rfarrer@broadinstitute.org
 

@@ -1,25 +1,8 @@
 ### r.farrer@exeter.ac.uk
 
-# Check, install, or add libraries
-#lib_location = '/home/unix/rfarrer/R/x86_64-unknown-linux-gnu-library/3.1'
-#lib_location = '/Library/Frameworks/R.framework/Resources/library'
-
 find_os <- function() {
-	lib_location = ""
-	OS <- Sys.info()['sysname']
-	if(OS == "Darwin") {
-		lib_location = '/Library/Frameworks/R.framework/Resources/library'
-	}
-	else if(OS == "Linux") {
-		#lib_location = '/usr/lib/R/library'
-		lib_location = '~/R/x86_64-pc-linux-gnu-library/4.1'
-	}
-	else {
-		stop("ERROR: R_functions.R -> find_os: OS cannot be determined", call.=FALSE)
-	}
+	lib_location = .libPaths()[1]
 	return(lib_location)
-	#lib_location = .libPaths()
-	#return(lib_location[1])
 }
 
 add_dependency <- function(library_wanted) {
